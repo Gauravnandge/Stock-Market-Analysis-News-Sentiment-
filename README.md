@@ -23,7 +23,7 @@ This is a comprehensive, interactive web application built with Streamlit for st
 * **Frontend:** Streamlit
 * **Data Source:** `yfinance` for real-time stock data.
 * **Data Science & ML:** Pandas, NumPy, Scikit-learn
-* **Deep Learning (Price Prediction):** TensorFlow / Keras
+* **Mechine Learning (Price Prediction):** Bidirectional Gru 
 * **NLP (Sentiment Analysis):** PyTorch, Hugging Face Transformers (FinBERT)
 * **AI Chatbot & RAG:** LangChain, Google Generative AI (Gemini 1.5 Flash), FAISS (for vector storage)
 * **Plotting:** Plotly
