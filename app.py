@@ -32,8 +32,66 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
+# --- NEW IMPORTS FOR DOWNLOADING ---
+import gdown
+import zipfile
+import shutil
 
 warnings.filterwarnings('ignore')
+
+# --- NEW: FUNCTION TO DOWNLOAD AND UNZIP FILES FROM GOOGLE DRIVE ---
+def download_and_unzip_files():
+    """Downloads and unzips model files from Google Drive if they don't already exist."""
+    # Check if a key directory exists to prevent re-downloading on every run
+    if os.path.exists("models") and os.path.exists("sentiment_models") and os.path.exists("scalers"):
+        st.toast("Model and data files already loaded.", icon="✅")
+        return
+
+    st.info("Downloading required model and data files. This may take a moment...", icon="⏳")
+    progress_bar = st.progress(0, text="Starting download...")
+
+    try:
+        # Google Drive folder ID from the provided link
+        folder_id = "1KlrX-8p0NpQEWgPDLm7zypHF1BHLalid"
+        output_zip_path = "stock_sentiment_files.zip"
+
+        # Use gdown to download the folder as a zip file
+        progress_bar.progress(10, text="Contacting Google Drive...")
+        gdown.download_folder(id=folder_id, output=output_zip_path, quiet=True, use_cookies=False)
+        progress_bar.progress(50, text="Extracting files...")
+
+        # Unzip the downloaded file
+        with zipfile.ZipFile(output_zip_path, 'r') as zip_ref:
+            zip_ref.extractall(".") # Extract to the current directory
+
+        # gdown downloads the folder into a directory named after the Google Drive folder.
+        # We need to move the contents out of this sub-directory.
+        source_folder = "Stock sentiment" # This is the name of your folder on Google Drive
+        if os.path.exists(source_folder):
+             # Move all contents from the nested folder to the current app directory
+            for item in os.listdir(source_folder):
+                source_path = os.path.join(source_folder, item)
+                dest_path = os.path.join(".", item)
+                if os.path.isdir(source_path):
+                    if os.path.exists(dest_path): # If destination directory exists, remove it first
+                        shutil.rmtree(dest_path)
+                    shutil.move(source_path, dest_path)
+                else:
+                    shutil.move(source_path, dest_path)
+            # Remove the now-empty source folder
+            shutil.rmtree(source_folder)
+
+        # Clean up the downloaded zip file
+        os.remove(output_zip_path)
+        
+        progress_bar.progress(100, text="Download and setup complete!")
+        st.success("✅ Files downloaded and extracted successfully!")
+        st.balloons()
+
+    except Exception as e:
+        st.error(f"Error downloading or unzipping files: {e}")
+        st.error("The application may not function correctly. Please check the Google Drive link and permissions.")
+        st.stop()
 
 # ----------------- PAGE CONFIGURATION -----------------
 st.set_page_config(
@@ -238,8 +296,18 @@ class Attention(Layer):
 def load_sentiment_models():
     """Load pre-trained sentiment analysis models"""
     try:
-        # Load FinBERT model and tokenizer
-        model_path = './finbert_stock_sentiment_model'
+        # --- MODIFIED: Updated file paths to match downloaded folder structure ---
+        finbert_folder = 'finbert_stock_sentiment_model'
+        sentiment_folder = 'sentiment_models'
+        
+        # Path to the FinBERT model directory
+        model_path = os.path.join(sentiment_folder, finbert_folder)
+        
+        # Paths to the joblib files
+        impact_model_path = os.path.join(sentiment_folder, 'impact_prediction_model.pkl')
+        label_encoder_path = os.path.join(sentiment_folder, 'label_encoder.pkl')
+        # --- END OF MODIFICATION ---
+        
         if os.path.exists(model_path):
             tokenizer = BertTokenizer.from_pretrained(model_path)
             model = BertForSequenceClassification.from_pretrained(model_path, use_safetensors=True)
@@ -248,12 +316,12 @@ def load_sentiment_models():
             model.eval()
 
             # Load impact prediction model and label encoder
-            impact_model = joblib.load('impact_prediction_model.pkl')
-            label_encoder = joblib.load('label_encoder.pkl')
+            impact_model = joblib.load(impact_model_path)
+            label_encoder = joblib.load(label_encoder_path)
 
             return tokenizer, model, impact_model, label_encoder, device
         else:
-            st.error("Sentiment models not found. Please ensure models are trained and saved.")
+            st.error("Sentiment models not found. Please ensure the download was successful.")
             return None, None, None, None, None
     except Exception as e:
         st.error(f"Error loading sentiment models: {str(e)}")
@@ -461,8 +529,8 @@ def add_technical_indicators(df):
     minus_dm[minus_dm > 0] = 0
 
     tr = pd.concat([df['High'] - df['Low'],
-                      np.abs(df['High'] - df['Close'].shift(1)),
-                      np.abs(df['Low'] - df['Close'].shift(1))], axis=1).max(axis=1)
+                    np.abs(df['High'] - df['Close'].shift(1)),
+                    np.abs(df['Low'] - df['Close'].shift(1))], axis=1).max(axis=1)
     atr = tr.ewm(span=14, adjust=False).mean()
 
     plus_di = 100 * (plus_dm.ewm(alpha=1/14).mean() / atr)
@@ -594,7 +662,7 @@ def create_candlestick_chart(df, title):
                         subplot_titles=(f'{title} Price', 'Volume'), row_heights=[0.7, 0.3])
 
     fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'],
-                                  low=df['Low'], close=df['Close'], name="Price"), row=1, col=1)
+                                 low=df['Low'], close=df['Close'], name="Price"), row=1, col=1)
     fig.add_trace(go.Scatter(x=df.index, y=df['SMA_20'], mode='lines',
                              name='SMA 20', line=dict(color='orange', width=1)), row=1, col=1)
     fig.add_trace(go.Scatter(x=df.index, y=df['SMA_50'], mode='lines',
@@ -646,7 +714,7 @@ def predict_next_price(symbol, df):
     # Load the model and the feature scaler (no target scaler anymore)
     model, feature_scaler = load_model_and_scaler(symbol)
     if not all([model, feature_scaler]):
-        st.error(f"Model or feature scaler for {symbol} is missing. Please run the training script.")
+        st.error(f"Model or feature scaler for {symbol} is missing. Please check if the files were downloaded correctly.")
         return None, None, None
 
     try:
@@ -1239,7 +1307,7 @@ def render_price_prediction():
 
 def setup_rag_chain(api_key):
     """Sets up the RAG chain for answering questions from the CSV file."""
-    csv_file_path = 'newstock_data.csv'
+    csv_file_path = 'data/newstock_data.csv' # Assuming the csv is in the 'data' folder
     if not os.path.exists(csv_file_path):
         st.error(f"Error: The data file '{csv_file_path}' was not found.")
         return None
@@ -1326,7 +1394,7 @@ def render_ai_chatbot():
             "Select Assistant Mode:",
             ("AI Data Analyst (CSV-Powered)", "General Stock Assistant"),
             horizontal=True,
-            help="Choose 'AI Data Analyst' to ask specific questions about your `newstock_data.csv` file. Choose 'General Stock Assistant' for broad questions about the market or this app."
+            help="Choose 'AI Data Analyst' to ask specific questions about the `newstock_data.csv` file. Choose 'General Stock Assistant' for broad questions about the market or this app."
         )
 
         # Initialize message histories
@@ -1334,8 +1402,8 @@ def render_ai_chatbot():
             st.session_state.rag_messages = [AIMessage(content="Hello! I am your AI Data Analyst. Ask me anything about the content of your `newstock_data.csv` file.")]
         if "general_messages_init" not in st.session_state:
              if st.session_state.general_chain:
-                st.session_state.general_chain.memory.chat_memory.add_ai_message("Hello! I am FinBot, your General Stock Assistant. How can I help you understand the market or this dashboard today?")
-                st.session_state.general_messages_init = True
+                 st.session_state.general_chain.memory.chat_memory.add_ai_message("Hello! I am FinBot, your General Stock Assistant. How can I help you understand the market or this dashboard today?")
+                 st.session_state.general_messages_init = True
 
 
         # --- RAG (CSV) CHATBOT INTERFACE ---
@@ -1502,6 +1570,9 @@ def render_model_information():
 
 # ----------------- MAIN APP LOGIC -----------------
 def main():
+    # --- NEW: Call the download function at the start of the app ---
+    download_and_unzip_files()
+    
     st.markdown('<h1 class="main-header">📈 Stock Market Price Prediction and News Sentiment Analysis</h1>', unsafe_allow_html=True)
 
     # --- TOP NAVIGATION BAR ---
