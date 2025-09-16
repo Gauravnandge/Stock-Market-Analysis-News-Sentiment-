@@ -10,9 +10,9 @@ This is a comprehensive, interactive web application built with Streamlit for st
 
 * **🌍 Market Overview:** Get a real-time snapshot of the market with major indices (S&P 500, Dow Jones, NASDAQ), top daily gainers and losers, and a performance heatmap of key stocks.
 * **📊 Deep Dive Stock Analysis:** Select any stock to view detailed interactive charts, including candlestick patterns, volume, and over 25 technical indicators like RSI, MACD, Bollinger Bands, SMA, and more.
-* **🔮 AI Price Prediction:** Utilizes a sophisticated hybrid **CNN-BiGRU-Attention** model to forecast the next day's stock price and market direction (Up, Down, Sideways) with a confidence score.
-* **📰 AI News Sentiment Analysis:** Analyzes any financial news headline using a fine-tuned **FinBERT** model to determine the sentiment (Positive, Negative, Neutral) and predicts the potential price impact using an XGBoost model.
-* **🤖 AI Financial Assistant:** A built-in chatbot powered by **Google's Gemini 1.5 Flash** with two modes:
+* **🔮 Price Prediction:** Utilizes a sophisticated hybrid **CNN-BiGRU-Attention** model to forecast the next day's stock price and market direction (Up, Down, Sideways) with a confidence score.
+* **📰 News Sentiment Analysis:** Analyzes any financial news headline using a fine-tuned **FinBERT** model to determine the sentiment (Positive, Negative, Neutral) and predicts the potential price impact using an XGBoost model.
+* **🤖 Financial Assistant:** A built-in chatbot powered by **Google's Gemini 1.5 Flash** with two modes:
     * **General Assistant:** Answers broad questions about market trends, financial concepts, and how to use the dashboard.
     * **Data Analyst (RAG):** Answers specific questions about your own data by querying an uploaded `newstock_data.csv` file using a Retrieval-Augmented Generation (RAG) pipeline.
 
@@ -44,7 +44,7 @@ Follow these instructions to set up and run the project locally.
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
+    git clone [https://github.com/Gauravnandge/Stock-Market-Analysis-News-Sentiment-.git)
     cd your-repo-name
     ```
 
@@ -108,6 +108,7 @@ Follow these instructions to set up and run the project locally.
 ## 📁 Project Structure
 
 The application automatically creates the following directory structure upon first run by downloading the necessary assets.
+ ```
 .
 ├── sentiment_models/
 │   ├── finbert_stock_sentiment_model/
@@ -127,8 +128,7 @@ The application automatically creates the following directory structure upon fir
 ├── app.py
 ├── requirements.txt
 └── README.md
-
-
+ ```
 ---
 
 ## ⚖️ Disclaimer
