@@ -1,4 +1,4 @@
-# 📈 AI-Powered Stock Analysis & Prediction Dashboard
+# 📈Stock Market Price Prediction and News Sentiment Analysis 
 
 This is a comprehensive, interactive web application built with Streamlit for stock market analysis. It leverages multiple AI and Machine Learning models to provide deep insights, including real-time data visualization, AI-powered price prediction, news sentiment analysis with price impact, and an integrated AI financial assistant.
 
