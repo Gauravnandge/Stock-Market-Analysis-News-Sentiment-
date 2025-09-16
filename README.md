@@ -27,30 +27,7 @@ your-project-name/
 └── app.py                # Main Streamlit application file
 ```
 
-## How to Run
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git](https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git)
-    cd YOUR_REPOSITORY
-    ```
-
-2.  **Create a virtual environment and install dependencies:**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-    pip install -r requirements.txt
-    ```
-
-3.  **Train the AI Models:**
-    *First, run the price prediction model training script:*
-    ```bash
-    python train_price_model.py
-    ```
-    *Next, run the sentiment analysis model training script:*
-    ```bash
-    python train_sentiment_model.py
-    ```
 
 4.  **Run the Streamlit App:**
     ```bash
